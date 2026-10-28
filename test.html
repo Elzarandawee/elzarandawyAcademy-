@@ -1,0 +1,11 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Connection test</title>
+<style>body{font:15px system-ui;padding:16px;max-width:600px;margin:auto}pre{white-space:pre-wrap;word-break:break-word;background:#f3f3f3;padding:10px;border-radius:8px}button{padding:12px 18px;font-size:16px;background:#0f5132;color:#fff;border:0;border-radius:8px}</style></head><body>
+<h2>Connection test</h2><p>Tap the button and send me a screenshot of the result.</p><button onclick="go()">Run test</button><pre id="o">Not run yet.</pre>
+<script>
+var API="https://script.google.com/macros/s/AKfycbzq8pehoNKYKQdLEzV-H9q_k5RTCNnGh5cZKFD8ZKUtPz6KLxLxXa8Zeqow_ZMyu7w_/exec";
+async function go(){var o=document.getElementById('o');o.textContent='Testing...';var out='Page address: '+location.href+'\nProtocol: '+location.protocol+'\n\n';
+ try{var r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({method:'GET',path:'/api/public/bootstrap',query:{},body:{},files:[]}),redirect:'follow'});
+  var t=await r.text();out+='HTTP '+r.status+'\n\n'+t.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').slice(0,600);}
+ catch(e){out+='FAILED to reach Google: '+e.message;}
+ o.textContent=out;}
+</script></body></html>

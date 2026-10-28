@@ -406,8 +406,12 @@ module.exports = { toSvg, build };
     } else if (typeof opt.body === 'string') { try { body = JSON.parse(opt.body); } catch (e) {} }
     var ckey = method === 'GET' && /^\/api\/(public\/(bootstrap|courses)|auth\/me)/.test(url.pathname) ? tok.get() + '|' + url.pathname + url.search : null;
     if (ckey && cache[ckey] && Date.now() - cache[ckey].t < 20000) return resp(cache[ckey].s, cache[ckey].d);
-    var r = await realFetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ method: method, path: url.pathname, query: query, body: body, files: files, token: tok.get() }), redirect: 'follow' });
-    var j = await r.json();
+    var r, j, txt;
+    try { r = await realFetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ method: method, path: url.pathname, query: query, body: body, files: files, token: tok.get() }), redirect: 'follow' }); }
+    catch (e) { window.__LASTERR = 'Cannot reach Google (' + (e && e.message) + ')'; throw e; }
+    txt = await r.text();
+    try { j = JSON.parse(txt); } catch (e) { window.__LASTERR = 'Google answered with a page instead of data (HTTP ' + r.status + '): ' + txt.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 160); throw new Error(window.__LASTERR); }
+    if (j.status >= 500) window.__LASTERR = 'Server error: ' + ((j.data && j.data.error) || '');
     var d = sub(j.data);
     if (d && d.token !== undefined) { tok.set(d.token); delete d.token; }
     if (url.pathname === '/api/public/bootstrap' && d) d.baseUrl = window.VLOC.origin;
@@ -1537,7 +1541,7 @@ window.ICONS={"house":["0 0 512 512","M277.8 8.6c-12.3-11.4-31.3-11.4-43.5 0l-22
   };
 
   (async function start() {
-    try { await loadBoot(); } catch (e) { document.getElementById('app').innerHTML = '<div class="loading">The academy is unreachable right now. Please try again shortly.</div>'; return; }
+    try { await loadBoot(); } catch (e) { document.getElementById('app').innerHTML = '<div class="loading">The academy is unreachable right now. Please try again shortly.<br><small style="display:block;margin-top:14px;color:#8a3b00;word-break:break-word">Reason: ' + (window.__LASTERR || (e && e.message) || 'unknown') + '</small></div>'; return; }
     await loadMe();
     if (App.boot.settings.logo) document.querySelector('link[rel=icon]').href = App.boot.settings.logo;
     shell();
